@@ -1,0 +1,58 @@
+#!/bin/bash
+#### Installing dependencies ####
+echo "During the intallation process, stay close of your terminal to insert the sudo password when needed."
+sleep 4
+# GNU Radio 3.7 uses python2, whole dependecies must to be in python2 and not python3+
+sudo pacman -S --noconfirm python2
+
+sudo pacman -S --noconfirm git
+sudo pacman -S --noconfirm cmake
+sudo pacman -S --noconfirm boost
+sudo pacman -S --noconfirm cppunit
+sudo pacman -S --noconfirm python2-mako
+sudo pacman -S --noconfirm log4cpp
+sudo pacman -S --noconfirm swig
+sudo pacman -S --noconfirm python2-numpy
+
+sudo pacman -S --noconfirm doxygen
+sudo pacman -S --noconfirm python2-cheetah
+
+# UHD is Needed to deal with USRPs
+
+sudo pacman -S --noconfirm uhd
+# Downgrading the SIP
+sudo pacman -U https://archive.archlinux.org/packages/s/sip/sip-4.19.16-1-x86_64.pkg.tar.xz
+
+
+# Manual Installation of QT4 for Python2.7
+echo "Building python2-pyqt4, this will take a while! Be patience and wait the end to insert the sudo password."
+sleep 4
+mkdir ~/gnuradio-builds
+cd gnuradio-builds
+git clone https://aur.archlinux.org/pyqt4.git
+cd pyqt4
+makepkg -si
+cd ..
+
+# Manual Installation of QWT for QT4 and Python2.7
+git clone https://aur.archlinux.org/qwt-qt4.git
+cd qwt-qt4
+makepkg -si
+cd ..
+
+#### Installing GNU Radio
+
+git clone -b maint-3.7 --recursive https://github.com/gnuradio/gnuradio.git
+cd gnuradio
+mkdir build
+cd build
+cmake ..
+# Resolving the problem of qwt linking
+out=$(cat CMakeCache.txt | sed -r "s/qwt/qwt-qt4/g")
+printf "%s" "$out">CMakeCache.txt
+
+cmake ..
+make
+sudo make install
+cd ../..
+
